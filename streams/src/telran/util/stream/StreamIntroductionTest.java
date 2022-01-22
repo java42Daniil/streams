@@ -59,6 +59,9 @@ class StreamIntroductionTests {
 	private Integer [] getLotoNumbers(int nNumbers, int min, int max) {
 		//TODO
 		//using one stream to get array of unique random numbers in the given range
+		/* V.R. new Random().ints(min, max) creates random numbers >= min and <max
+		 *  That is why you need to write new Random().ints(min, max+1).
+		 */
 		return new Random().ints(min, max).distinct().limit(nNumbers).boxed().toArray(Integer[]::new);	}
 	@Test
 	void lotoTest () {
@@ -74,6 +77,7 @@ class StreamIntroductionTests {
 	 * @return true if ar contains two numbers, the sum of which equals half of all array's numbers
 	 * complexity O[N] 
 	 */
+	// V.R. What is the difference between method isHalfSum() and isHalfSum3()?
 	private boolean isHalfSum(int []ar) {
 		int halfSum = Arrays.stream(ar).sum() / 2;
 		HashSet<Integer> set = new HashSet<>();
@@ -89,6 +93,12 @@ class StreamIntroductionTests {
 	private boolean isHalfSum2(int[] ar) {
 		Arrays.sort(ar);
 		int halfSum = Arrays.stream(ar).sum() / 2;
+		/* V.R. 
+		 * The variable names have to be more notional, like leftIndex and rightIndex.
+		 * It is possible to use i, j and so on inside the circle for, like
+		 * for(int i=0; i<len; i++)
+		 * But even in case of for I prefer to use something more significative.
+		 */
 		int i = 0;
 		int j = ar.length - 1;
 		while (i < j) {
@@ -103,6 +113,7 @@ class StreamIntroductionTests {
 		}
 		return false;
 	}
+	// V.R. What is the difference between method isHalfSum3() and isHalfSum()?
 	private boolean isHalfSum3(int [] ar) {
 		int sum = Arrays.stream(ar).sum() / 2;
 		HashSet<Integer> hash = new HashSet<>();
@@ -123,11 +134,16 @@ class StreamIntroductionTests {
 		assertTrue(isHalfSum3(ar));
 		int ar1[] = {1, 2, 10, 7};
 		assertFalse(isHalfSum(ar1));
+		// V.R. assertTrue isn't correct, has to be assertFalse
 		assertTrue(isHalfSum2(ar1));
+		// V.R. assertTrue isn't correct, has to be assertFalse
 		assertTrue(isHalfSum3(ar1));
 		int ar3[] = { 4, 5, 6, 17};
+		// V.R.  assertTrue isn't correct, has to be assertFalse
 		assertTrue(isHalfSum(ar3));
+		// V.R.  assertTrue isn't correct, has to be assertFalse
 		assertTrue(isHalfSum2(ar3));
+		// V.R.  assertTrue isn't correct, has to be assertFalse
 		assertTrue(isHalfSum3(ar3));
 	}
 
