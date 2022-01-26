@@ -214,6 +214,8 @@ class StreamIntroductionTests {
 		new Random().ints(N_RUNS, MIN_VALUE, Integer.MAX_VALUE)
 		.flatMap(n -> Integer.toString(n).chars())
 		.boxed()
+		// V.R. TreeMap::new is redundant here, it is possible to skip it.
+		// We don't need any TreeMap feature.
 		.collect(Collectors.groupingBy(Function.identity(),TreeMap::new, Collectors.counting()))//functIdentity returns input value c->c
 		.entrySet().stream()
 		.sorted(Map.Entry.<Integer,Long>comparingByValue().reversed())//(e1,e2)-> Long.compare(e2.getValue(),e1.getValue())
