@@ -3,6 +3,8 @@ package telran.util.stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,9 +59,9 @@ class StreamIntroductionTests {
 		assertArrayEquals(new int[] {1, 2,3}, list.stream().mapToInt(n -> n).toArray());
 	}
 	private Integer [] getLotoNumbers(int nNumbers, int min, int max) {
-		//TODO
-		//using one stream to get array of unique random numbers in the given range
-		return new Random().ints(min, max).distinct().limit(nNumbers).boxed().toArray(Integer[]::new);	}
+		
+		return new Random().ints(min, max + 1).distinct().limit(nNumbers).boxed().toArray(Integer[]::new);
+	}
 	@Test
 	void lotoTest () {
 		Integer [] lotoNumbers = getLotoNumbers(7, 1, 49);
@@ -67,6 +69,47 @@ class StreamIntroductionTests {
 		
 		assertEquals(7, new HashSet<Integer>(Arrays.asList(lotoNumbers)).size());
 		Arrays.stream(lotoNumbers).forEach(n -> assertTrue(n >= 1 && n <= 49));
+		HashSet<Integer> set = new HashSet<>();
+		for(int i = 0; i < 1000; i++) {
+			for(int num: getLotoNumbers(7, 1, 49)) {
+				set.add(num);
+			}
+		}
+		for (int i = 1; i <= 49; i++) {
+			assertTrue(set.contains(i));
+		}
+		
+	}
+	/**
+	 * 
+	 * @param ar
+	 * @return true if ar contains two numbers, the sum of which equals half of all array's numbers
+	 * with no additional arrays / collections
+	 */
+	private boolean isHalfSumNoSet(int []ar) {
+		int halfSum = Arrays.stream(ar).sum() / 2 ;
+		
+		Arrays.sort(ar);
+		int leftInd = 0; 
+	    int rightInd = (ar.length - 1); 
+	 
+	    while(leftInd < rightInd) { 
+	        if(ar[leftInd] + ar[rightInd] == halfSum) 
+	            return true; 
+	        else if(ar[leftInd] + ar[rightInd] > halfSum) 
+	            rightInd--; 
+	        else 
+	            leftInd++; 
+	    } 
+	    	return false; 
+		
+	}
+	@Test
+	void isHalfSumTest() {
+		int ar[] = {1,2, 10, -3, -4};
+		assertTrue(isHalfSum(ar));
+		int ar1[] = {1, 2, 10, 7};
+		assertFalse(isHalfSum(ar1));
 	}
 	/**
 	 * 
@@ -74,61 +117,112 @@ class StreamIntroductionTests {
 	 * @return true if ar contains two numbers, the sum of which equals half of all array's numbers
 	 * complexity O[N] 
 	 */
-	private boolean isHalfSum(int []ar) {
+	private boolean isHalfSum(int[] ar) {
+		HashSet<Integer> helper = new HashSet<>();
 		int halfSum = Arrays.stream(ar).sum() / 2;
-		HashSet<Integer> set = new HashSet<>();
-		for (int i = 0; i < ar.length; i++) {
-			int sum = halfSum - ar[i];
-			if (set.contains(sum)) {
+		for(int num: ar) {
+			if (helper.contains(halfSum - num)) {
 				return true;
-			}
-			set.add(ar[i]);
+			} 
+			helper.add(num);
+			
 		}
 		return false;
 	}
-	private boolean isHalfSum2(int[] ar) {
-		Arrays.sort(ar);
-		int halfSum = Arrays.stream(ar).sum() / 2;
-		int i = 0;
-		int j = ar.length - 1;
-		while (i < j) {
-			if (ar[i] + ar[j] == halfSum) {
-				return true;
-			}
-			if (ar[i] + ar[j] > halfSum) {
-				j--;
-			} else {
-				i++;
-			}
-		}
-		return false;
-	}
-	private boolean isHalfSum3(int [] ar) {
-		int sum = Arrays.stream(ar).sum() / 2;
-		HashSet<Integer> hash = new HashSet<>();
-		for(int n : ar) {
-			int x = sum - n;
-			if(hash.contains(x)) {
-				return true;
-			}
-			hash.add(n);
-		}
-		return false;
+	private long sum(int ar[][]) {
+//		return Arrays.stream(ar).mapToLong(a -> Arrays.stream(a).asLongStream().sum()).sum();
+		return Arrays.stream(ar).flatMapToInt(Arrays::stream).asLongStream().sum();
 	}
 	@Test
-	void isHalfSumTest() {
-		int ar[] = {1,2, 10, -7};
-		assertTrue(isHalfSum(ar));
-		assertTrue(isHalfSum2(ar));
-		assertTrue(isHalfSum3(ar));
-		int ar1[] = {1, 2, 10, 7};
-		assertFalse(isHalfSum(ar1));
-		assertTrue(isHalfSum2(ar1));
-		assertTrue(isHalfSum3(ar1));
-		int ar3[] = { 4, 5, 6, 17};
-		assertTrue(isHalfSum(ar3));
-		assertTrue(isHalfSum2(ar3));
-		assertTrue(isHalfSum3(ar3));
+	void groupsSumTest() {
+		int ar[][] = {{1,2},{3,4},{5,6}};
+		assertEquals(21, sum(ar));
 	}
+	@Test
+	void evenOddTestRandom() {
+		Map<String, List<Integer>> mapEvenOdd;
+		mapEvenOdd = new Random().ints(10, 1,100).boxed().collect(Collectors.groupingBy(n -> n % 2 == 0 ? "even" : "odd"));
+		mapEvenOdd.forEach((k, v) -> {
+			if (k.equals("even")) {
+				v.forEach(n -> assertTrue(n %2 == 0));
+			} else {
+				v.forEach(n -> assertTrue(n % 2 == 1));
+			}
+		});
+		
+		
+		
+	}
+	@Test
+	void evenOddDownStream() {
+		List<Integer> list = Arrays.asList(1, 2 ,3,4,8,10, 7);
+		Map<String, Long> mapOddEven = list.stream()
+				.collect(Collectors.groupingBy(n -> n % 2 == 0 ? "even" : "odd", Collectors.counting()));
+		assertEquals(3, mapOddEven.get("odd"));
+		assertEquals(4, mapOddEven.get("even"));
+		
+		
+	}
+	@Test
+	void digitsGroupingTest() {
+		List<Integer> list = Arrays.asList(10, 300, 500, 1, 2, -100);
+		Map<Integer, Integer> mapDigits = list.stream()
+				.collect(Collectors.groupingBy(n -> Integer.toString(Math.abs(n)).length(),
+						Collectors.summingInt(n -> n)));
+		assertEquals(3, mapDigits.get(1));
+		assertEquals(10, mapDigits.get(2));
+		assertEquals(700, mapDigits.get(3));
+	}
+	@Test
+	void testOccurrencesCount() {
+		String str = "lmn ab lmn aa; a, lmn ab.aa";
+		String outputExp = "lmn -> 3\naa -> 2\nab -> 2\na -> 1\n";
+		String outputActual = getOccurrences(str);
+		assertEquals(outputExp, outputActual);
+	}
+
+	private String getOccurrences(String str) {
+		
+		return Arrays.stream(str.split("[^A-Za-z]+")) //stream of words
+				.collect(Collectors.groupingBy(s -> s, TreeMap::new, Collectors.counting()))//grouping word: occurrences
+				.entrySet().stream().sorted((e1, e2)->Long.compare(e2.getValue(), e1.getValue()))//sorted by occurrences in descending
+				.map(e -> String.format("%s -> %d", e.getKey(),e.getValue()))//stream entries to stream of strings
+				.collect(Collectors.joining("\n")) + "\n";
+	}
+	private void arrayShuffling(int ar[]) {
+		//TODO printing out array in the shuffling order
+		//with out any additional collections
+		//one pipeline 
+		new Random().ints(0, ar.length).distinct().limit(ar.length)
+		.forEach(el -> System.out.print(ar[el] + "  "));
+	}
+	@Test
+	void shufflingTest() {
+		System.out.println("----------Shuffled array is------------");
+		arrayShuffling(new int[] {1,2,3,4});
+		System.out.println("\n----------------------");
+	}
+	private void digitStatistics() {
+		//TODO 
+		//generating 1_000_000 random positive numbers [1-Integer.MAX_VALUE)
+		//display out digits and occurrences sorted by occurrences in descending order
+		// 1: <occurrences value>
+		// 2: ...
+		// 4: 
+		final long N_RUNS = 1_000_000;
+		final int MIN_VALUE = 1;
+		new Random().ints(N_RUNS, MIN_VALUE, Integer.MAX_VALUE)
+		.flatMap(n -> Integer.toString(n).chars())
+		.boxed()
+		.collect(Collectors.groupingBy(Function.identity(),TreeMap::new, Collectors.counting()))//functIdentity returns input value c->c
+		.entrySet().stream()
+		.sorted(Map.Entry.<Integer,Long>comparingByValue().reversed())//(e1,e2)-> Long.compare(e2.getValue(),e1.getValue())
+		.forEach(e-> System.out.printf("\n%c: %d ",e.getKey(), e.getValue()));
+	}
+	@Test
+	void digitStatisticsTest() {
+		System.out.println("\n----------digitStatisticsTest begins------------");
+		digitStatistics();
+		System.out.println("----------shufflingTest finishes------------");	}
 
 }
